@@ -4,6 +4,7 @@ import unittest
 import fnmatch
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
 
 class TestGetFilesInfo(unittest.TestCase):
@@ -40,6 +41,25 @@ class TestGetFileContent(unittest.TestCase):
         result = get_file_content("calculator", "lorem.txt")
         pattern = "* truncated at 10000 characters]"
         self.assertTrue(fnmatch.fnmatch(result, pattern))
+
+
+class TestWriteFile(unittest.TestCase):
+    def test_write_file(self):
+        result = write_file("calculator", "lorem2.txt", "wait, this isn't lorem ipsum")
+        pattern = "Successfully wrote to * characters written)"
+        print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+    def test_write_subdirectory_file(self):
+        result = write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")
+        pattern = "Successfully wrote to * characters written)"
+        print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+    def test_no_write_access(self):
+        result = write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
+        pattern = "Error: Cannot write to * as it is outside the permitted working directory"
+        print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+
 
 
 if __name__ == "__main__":
