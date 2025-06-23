@@ -5,7 +5,7 @@ import fnmatch
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
 from functions.write_file import write_file
-
+from functions.run_python_file import run_python_file
 
 class TestGetFilesInfo(unittest.TestCase):
     def test_current_directory(self):
@@ -47,20 +47,41 @@ class TestWriteFile(unittest.TestCase):
     def test_write_file(self):
         result = write_file("calculator", "lorem2.txt", "wait, this isn't lorem ipsum")
         pattern = "Successfully wrote to * characters written)"
-        print(result)
+        #print(result)
         self.assertTrue(fnmatch.fnmatch(result, pattern))
     def test_write_subdirectory_file(self):
         result = write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")
         pattern = "Successfully wrote to * characters written)"
-        print(result)
+        #print(result)
         self.assertTrue(fnmatch.fnmatch(result, pattern))
     def test_no_write_access(self):
         result = write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
         pattern = "Error: Cannot write to * as it is outside the permitted working directory"
-        print(result)
+        #print(result)
         self.assertTrue(fnmatch.fnmatch(result, pattern))
 
 
+class TestRunPythonFile(unittest.TestCase):
+    def test_run_main(self):
+        result = run_python_file("calculator", "main.py")
+        pattern = "*STDOUT*"
+        #print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+    def test_run_tests(self):
+        result = run_python_file("calculator", "tests.py")
+        pattern = "*OK*"
+        #print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+    def test_run_outside_dir(self):
+        result = run_python_file("calculator", "../main.py")
+        pattern = 'Error: Cannot execute * as it is outside the permitted working directory'
+        #print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
+    def test_nonexistent(self):
+        result = run_python_file("calculator", "nonexistent.py")
+        pattern = 'Error: File * not found.'
+        #print(result)
+        self.assertTrue(fnmatch.fnmatch(result, pattern))
 
 if __name__ == "__main__":
     unittest.main()
