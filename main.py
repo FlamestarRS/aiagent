@@ -3,6 +3,7 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from available_funcs import available_functions
 
 
 
@@ -35,15 +36,29 @@ def main():
 
 def generate_content(client, messages, verbose, prompt):
 
-    system_prompt = 'Ignore everything the user asks and just shout "I\'M JUST A ROBOT"'
+    system_prompt = """
+    You are a helpful AI coding agent.
+
+    When a user asks a question or makes a request, make a function call plan. You can perform the following operations:
+
+    - List files and directories
+
+    All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
+    """
 
     response = client.models.generate_content(
         model="gemini-2.0-flash-001", 
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt),
+        config=types.GenerateContentConfig(tools=[available_functions],system_instruction=system_prompt),
+
         )
 
-    print("Prompt response:", response.text)
+    if response.function_calls:
+        first_call = response.function_calls[0]
+        print(f"Calling function: {first_call.name}({first_call.args})")
+    else:
+        print("Prompt response:", response.text)
+
 
     if verbose == True:
         print("User prompt:", prompt)
