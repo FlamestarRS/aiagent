@@ -52,23 +52,33 @@ def generate_content(client, messages, verbose, prompt):
     All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
     """
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-001", 
-        contents=messages,
-        config=types.GenerateContentConfig(tools=[available_functions],system_instruction=system_prompt),
+    iterations = 0
+    while iterations < 20:
 
-        )
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001", 
+            contents=messages,
+            config=types.GenerateContentConfig(tools=[available_functions],system_instruction=system_prompt),
 
-    if response.function_calls:
-        first_call = response.function_calls[0]
-        result = call_function(first_call, verbose)
-        if not result.parts[0].function_response.response:
-            raise ValueError("Error: no response from function call.")
-        elif verbose:
-            print(f"-> {result.parts[0].function_response.response["result"]}")
-            
-    else:
-        print("Prompt response:", response.text)
+            )
+
+
+        for candidate in response.candidates:
+            messages.append(candidate.content)
+
+        if response.function_calls:
+            first_call = response.function_calls[0]
+            result = call_function(first_call, verbose)
+            messages.append(result)
+            if not result.parts[0].function_response.response:
+                raise ValueError("Error: no response from function call.")
+            elif verbose:
+                print(f"-> {result.parts[0].function_response.response["result"]}")
+
+            iterations += 1
+        else:         
+            print("Prompt response:", response.text)
+            break
 
 
     if verbose == True:
